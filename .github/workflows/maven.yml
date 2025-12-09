@@ -1,0 +1,30 @@
+name: Java CI with Maven
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+        
+    - name: Build with Maven
+      # The project is in a subdirectory, so we need to run the command from the root
+      # and specify the pom file path.
+      run: mvn -B verify --file room-reservation-service/pom.xml
+      
+    # Note: If Testcontainers were used, this workflow would need a setup step
+    # to ensure Docker is available on the runner. Since we reverted to H2,
+    # the standard build command is sufficient.
