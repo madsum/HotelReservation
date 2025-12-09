@@ -1,0 +1,123 @@
+openapi: 3.0.0
+info:
+  title: Room Reservation API
+  description: API for confirming and managing room reservations for Marvel Hospitality.
+  version: 1.0.0
+servers:
+  - url: /api/v1
+    description: Base URL for the Room Reservation Service
+
+paths:
+  /reservations/confirm:
+    post:
+      tags:
+        - Reservations
+      summary: Confirm a room reservation based on payment mode.
+      operationId: confirmReservation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservationRequest'
+      responses:
+        '201':
+          description: Reservation successfully created and status determined.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservationResponse'
+        '400':
+          description: Bad Request due to validation error, payment failure, or missing reference.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error.
+
+components:
+  schemas:
+    ReservationRequest:
+      type: object
+      properties:
+        customerName:
+          type: string
+          description: Name of the customer.
+          example: Tony Stark
+        roomNumber:
+          type: string
+          description: The room number to be reserved.
+          example: A101
+        startDate:
+          type: string
+          format: date
+          description: Reservation start date (YYYY-MM-DD).
+          example: 2025-12-15
+        endDate:
+          type: string
+          format: date
+          description: Reservation end date (YYYY-MM-DD).
+          example: 2025-12-18
+        roomSegment:
+          type: string
+          enum: [SMALL, MEDIUM, LARGE, EXTRA_LARGE]
+          description: Size of the room.
+          example: LARGE
+        paymentMode:
+          type: string
+          enum: [CASH, CREDIT_CARD, BANK_TRANSFER]
+          description: Mode of payment.
+          example: CREDIT_CARD
+        paymentReference:
+          type: string
+          description: Unique reference for the payment. Required for CREDIT_CARD and BANK_TRANSFER.
+          example: CC-REF-98765
+      required:
+        - customerName
+        - roomNumber
+        - startDate
+        - endDate
+        - roomSegment
+        - paymentMode
+
+    ReservationResponse:
+      type: object
+      properties:
+        reservationId:
+          type: integer
+          format: int64
+          description: The unique ID of the reservation.
+          example: 1
+        reservationStatus:
+          type: string
+          enum: [PENDING_PAYMENT, CONFIRMED, CANCELLED]
+          description: The final status of the reservation.
+          example: CONFIRMED
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: The type of error.
+          example: Bad Request
+        message:
+          type: string
+          description: A detailed error message.
+          example: Payment reference is required for Bank Transfer payment.
+          
+    PaymentMode:
+      type: string
+      enum: [CASH, CREDIT_CARD, BANK_TRANSFER]
+      description: Mode of payment.
+
+    RoomSegment:
+      type: string
+      enum: [SMALL, MEDIUM, LARGE, EXTRA_LARGE]
+      description: Size of the room.
+
+    ReservationStatus:
+      type: string
+      enum: [PENDING_PAYMENT, CONFIRMED, CANCELLED]
+      description: The status of the reservation.
