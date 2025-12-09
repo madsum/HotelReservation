@@ -1,4 +1,4 @@
-package com.marvel.room_reservation_service;
+package com.marvel.reservation;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
