@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
@@ -127,12 +128,19 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public List<Reservation> findPendingBankTransferReservations(LocalDate date) {
-        // Find all PENDING_PAYMENT reservations that were made 2 days before the given date
-        LocalDate cutoffDate = date.minusDays(2);
-        return reservationRepository.findAll().stream()
-                .filter(r -> r.getStatus() == ReservationStatus.PENDING_PAYMENT)
+
+        /*
+         * Find all PENDING_PAYMENT reservations that were made 2 days before the given date.
+         * Uses custom JPA query where possible instead of filtering in memory.
+         */
+        var cutoffDate = date.minusDays(2);
+
+        return reservationRepository.findByStatusAndCreatedAtBefore(
+                        ReservationStatus.PENDING_PAYMENT,
+                        cutoffDate.atStartOfDay().atOffset(ZoneOffset.UTC)
+                )
+                .stream()
                 .filter(r -> r.getPaymentMode() == PaymentMode.BANK_TRANSFER)
-                .filter(r -> r.getReservationDate().isBefore(cutoffDate) || r.getReservationDate().isEqual(cutoffDate))
                 .toList();
     }
 
