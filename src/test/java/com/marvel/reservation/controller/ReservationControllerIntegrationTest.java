@@ -54,7 +54,6 @@ class ReservationControllerIntegrationTest {
         return request;
     }
 
-    // --- CASH Payment Tests ---
 
     @Test
     void confirmReservation_CASH_shouldReturnConfirmed() throws Exception {
@@ -67,9 +66,7 @@ class ReservationControllerIntegrationTest {
                 .andExpect(jsonPath("$.reservationStatus", is(ReservationStatus.CONFIRMED.name())));
     }
 
-    // --- BANK_TRANSFER Payment Tests ---
-
-    @Test
+        @Test
     void confirmReservation_BANK_TRANSFER_shouldReturnPendingPayment() throws Exception {
         ReservationRequest request = createBaseRequest(PaymentMode.BANK_TRANSFER, "P4145478");
 
@@ -90,37 +87,6 @@ class ReservationControllerIntegrationTest {
                         .andExpect(status().isBadRequest())
                         .andExpect(jsonPath("$.message")
                         .value("Payment reference is required for Bank Transfer payment."));    }
-
-
-    // --- CREDIT_CARD Payment Tests (Mocking External Service) ---
-
-    // Since we cannot easily mock the RestTemplate call in an @SpringBootTest,
-    // we will rely on the unit test for the CreditCardPaymentServiceImpl logic.
-    // For a true integration test, we would use a tool like WireMock to mock the external service.
-    // For the purpose of this assignment, we will assume the RestTemplate is configured correctly
-    // and focus on the database interaction and controller mapping.
-
-    // To make the credit card test pass without a real external service, we need to mock the external service.
-    // We will use a separate configuration for the CreditCardPaymentService to return a fixed response.
-
-    // --- Mocking Credit Card Service for Integration Test ---
-
-    // Create a mock server or a test configuration to handle the external call.
-    // Since we are using @SpringBootTest, we can use @MockBean to replace the CreditCardPaymentService.
-
-    // Note: The current setup with RestTemplate makes it hard to mock the external call
-    // without a dedicated mocking library like WireMock or by using @MockBean.
-    // Given the constraints, we will add a simple test that relies on the @MockBean approach
-    // which is common in Spring Boot testing, even if it blurs the line between unit and integration test.
-
-    // To use @MockBean, we need to move the CreditCardPaymentService to a separate class
-    // and use @MockBean in the test class.
-
-    // Let's assume we can use @MockBean here for simplicity in the integration test context.
-    // We will need to update the pom.xml to include spring-boot-starter-test which is already there.
-
-    // Re-writing the Credit Card test using @MockBean (requires adding @MockBean to the class)
-    // --- CREDIT_CARD Payment Tests (Using Mock Service) ---
 
     @Test
     void confirmReservation_CREDIT_CARD_shouldReturnConfirmed_whenPaymentIsSuccessful() throws Exception {
@@ -144,7 +110,6 @@ class ReservationControllerIntegrationTest {
 
     }
 
-    // --- General Validation Tests ---
 
     @Test
     void confirmReservation_shouldFail_whenReservationIsTooLong() throws Exception {

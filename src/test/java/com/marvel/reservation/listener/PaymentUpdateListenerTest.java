@@ -70,6 +70,5 @@ class PaymentUpdateListenerTest {
 
         // Assert
         verify(reservationService, never()).confirmBankTransferPayment(anyString());
-        // In a real test, we would verify logging of the error, but here we verify no further processing occurs.
     }
 }
