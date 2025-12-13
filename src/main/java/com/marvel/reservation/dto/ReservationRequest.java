@@ -5,12 +5,12 @@ import com.marvel.reservation.model.enums.RoomSegment;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
+import lombok.Getter;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 
-@Data
+@Getter
 public class ReservationRequest {
 
     @NotBlank(message = "Customer name is required")

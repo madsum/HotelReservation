@@ -12,29 +12,29 @@ import java.time.LocalDate;
 @Data
 public class Reservation {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
 
-    private String customerName;
+        private String customerName;
 
-    private String roomNumber;
+        private String roomNumber;
 
-    private LocalDate startDate;
+        private LocalDate startDate;
 
-    private LocalDate endDate;
+        private LocalDate endDate;
 
-    @Enumerated(EnumType.STRING)
-    private RoomSegment roomSegment;
+        @Enumerated(EnumType.STRING)
+        private RoomSegment roomSegment;
 
-    @Enumerated(EnumType.STRING)
-    private PaymentMode paymentMode;
+        @Enumerated(EnumType.STRING)
+        private PaymentMode paymentMode;
 
-    private String paymentReference;
+        private String paymentReference;
 
-    @Enumerated(EnumType.STRING)
-    private ReservationStatus status;
+        @Enumerated(EnumType.STRING)
+        private ReservationStatus status;
 
-    private LocalDate reservationDate = LocalDate.now();
-}
+        private LocalDate reservationDate = LocalDate.now();
+    }
 

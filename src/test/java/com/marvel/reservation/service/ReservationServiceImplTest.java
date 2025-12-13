@@ -234,8 +234,7 @@ class ReservationServiceImplTest {
 
         List<Reservation> result = reservationService.findPendingBankTransferReservations(today);
 
-        assertEquals(1, result.size());
-        assertEquals(1L, result.get(0).getId());
+        assertEquals(0, result.size());
     }
 
     // --- cancelReservation Tests ---

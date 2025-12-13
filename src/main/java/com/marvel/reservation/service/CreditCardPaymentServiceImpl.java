@@ -1,15 +1,17 @@
 package com.marvel.reservation.service;
 
+import com.marvel.reservation.constant.Message;
 import com.marvel.reservation.dto.CreditCardPaymentRequest;
 import com.marvel.reservation.dto.CreditCardPaymentResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 @Service
-@Log
+@Slf4j
 @RequiredArgsConstructor
 public class CreditCardPaymentServiceImpl implements CreditCardPaymentService {
     private final String CARD_STATUS = "CONFIRMED";
@@ -37,7 +39,7 @@ public class CreditCardPaymentServiceImpl implements CreditCardPaymentService {
             return response != null && CARD_STATUS.equalsIgnoreCase(response.getStatus());
         } catch (Exception e) {
             // Log the error and assume failure or throw a custom exception
-            log.severe("Error calling credit card payment service: " + e.getMessage());
+            log.error(String.format(Message.CARD_PAYMENT_EXCEPTION,e.getMessage()));
             return false;
         }
     }

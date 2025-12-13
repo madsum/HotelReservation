@@ -1,10 +1,12 @@
 package com.marvel.reservation.dto;
 
 import lombok.Data;
+import lombok.Getter;
 
 import java.math.BigDecimal;
 
-@Data
+//@Data
+@Getter
 public class PaymentUpdate {
     private String paymentId;
     private String debtorAccountNumber;

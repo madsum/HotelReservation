@@ -10,6 +10,7 @@ import com.marvel.reservation.model.enums.ReservationStatus;
 import com.marvel.reservation.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@Log
+@Slf4j
 @RequiredArgsConstructor
 public class ReservationServiceImpl implements ReservationService {
 
@@ -38,7 +39,7 @@ public class ReservationServiceImpl implements ReservationService {
         if (request.getStartDate().isAfter(request.getEndDate())) {
             throw new ValidationException("Start date cannot be after end date.");
         }
-
+        // use object mapper here
         Reservation reservation = new Reservation();
         reservation.setCustomerName(request.getCustomerName());
         reservation.setRoomNumber(request.getRoomNumber());
@@ -49,7 +50,7 @@ public class ReservationServiceImpl implements ReservationService {
         reservation.setPaymentReference(request.getPaymentReference());
 
         ReservationStatus status;
-
+        // java 21 arrow style
         switch (request.getPaymentMode()) {
             case CASH:
                 //If mode of payment is cash, room must be confirmed immediately
@@ -96,14 +97,14 @@ public class ReservationServiceImpl implements ReservationService {
         // We need to extract the reservationId (8 characters)
         String[] parts = transactionDescription.trim().split("\\s+");
         if (parts.length < 2) {
-            log.severe("Invalid transaction description format: " + transactionDescription);
+            log.error("Invalid transaction description format: " + transactionDescription);
             throw new ValidationException("Invalid transaction description format: " + transactionDescription);
         }
 
         // Assuming the reservationId is the second part and is 8 characters long
         String reservationIdString = parts[1];
         if (reservationIdString.length() != 8) {
-            log.severe("Reservation ID in transaction description is not 8 characters: " + reservationIdString);
+            log.error("Reservation ID in transaction description is not 8 characters: " + reservationIdString);
             throw new ValidationException("Reservation ID in transaction description is not 8 characters: " + reservationIdString);
         }
 
@@ -122,7 +123,7 @@ public class ReservationServiceImpl implements ReservationService {
                 log.info("Reservation " + reservation.getId() + " is already " + reservation.getStatus() + ". No change made.");
             }
         } else {
-            log.warning("Reservation not found for payment reference: " + reservationIdString);
+            log.warn("Reservation not found for payment reference: " + reservationIdString);
         }
     }
 

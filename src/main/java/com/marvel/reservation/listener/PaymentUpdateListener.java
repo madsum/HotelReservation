@@ -2,15 +2,17 @@ package com.marvel.reservation.listener;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.marvel.reservation.constant.Message;
 import com.marvel.reservation.dto.PaymentUpdate;
 import com.marvel.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 @Component
-@Log
+@Slf4j
 @RequiredArgsConstructor
 public class PaymentUpdateListener {
 
@@ -26,7 +28,7 @@ public class PaymentUpdateListener {
             // which contains the reservationId.
             reservationService.confirmBankTransferPayment(paymentUpdate.getTransactionDescription());
         } catch (JsonProcessingException e) {
-            log.severe("Error processing Kafka message: " + e.getMessage());
+            log.error(String.format(Message.KAFKA_EXCEPTION,e.getMessage()));
             // In a real application, we would handle this with a Dead Letter Queue (DLQ)
         }
     }
