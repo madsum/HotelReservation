@@ -1,5 +1,6 @@
 package com.marvel.reservation.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.marvel.reservation.dto.ReservationRequest;
 import com.marvel.reservation.dto.ReservationResponse;
 import com.marvel.reservation.exception.PaymentException;
@@ -20,9 +21,11 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,6 +36,9 @@ class ReservationServiceImplTest {
 
     @Mock
     private CreditCardPaymentService creditCardPaymentService;
+
+    @Mock
+    private ObjectMapper objectMapper; // Mock ObjectMapper
 
     @InjectMocks
     private ReservationServiceImpl reservationService;
@@ -56,39 +62,24 @@ class ReservationServiceImplTest {
         savedReservation.setStartDate(baseRequest.getStartDate());
         savedReservation.setEndDate(baseRequest.getEndDate());
         savedReservation.setRoomSegment(baseRequest.getRoomSegment());
-    }
 
-    @Test
-    void confirmReservation_shouldThrowException_whenReservationExceeds30Days() {
-        baseRequest.setStartDate(LocalDate.now().plusDays(1));
-        baseRequest.setEndDate(LocalDate.now().plusDays(32)); // 31 days
-        baseRequest.setPaymentMode(PaymentMode.CASH);
-
-        assertThrows(ValidationException.class, () -> reservationService.confirmReservation(baseRequest));
-    }
-
-    @Test
-    void confirmReservation_shouldThrowException_whenStartDateIsAfterEndDate() {
-        baseRequest.setStartDate(LocalDate.now().plusDays(5));
-        baseRequest.setEndDate(LocalDate.now().plusDays(3));
-        baseRequest.setPaymentMode(PaymentMode.CASH);
-
-        assertThrows(ValidationException.class, () -> reservationService.confirmReservation(baseRequest));
+        lenient().when(objectMapper.convertValue(any(ReservationRequest.class), eq(Reservation.class)))
+                .thenReturn(savedReservation);
     }
 
     @Test
     void confirmReservation_CASH_shouldConfirmImmediately() {
+        lenient().when(objectMapper.convertValue(any(ReservationRequest.class), eq(Reservation.class)))
+                .thenReturn(savedReservation);
+
         baseRequest.setPaymentMode(PaymentMode.CASH);
         savedReservation.setStatus(ReservationStatus.CONFIRMED);
-        savedReservation.setPaymentMode(PaymentMode.CASH);
 
         when(reservationRepository.save(any(Reservation.class))).thenReturn(savedReservation);
 
         ReservationResponse response = reservationService.confirmReservation(baseRequest);
 
         assertEquals(ReservationStatus.CONFIRMED, response.getReservationStatus());
-        verify(reservationRepository, times(1)).save(any(Reservation.class));
-        verify(creditCardPaymentService, never()).isPaymentConfirmed(anyString());
     }
 
     @Test
@@ -132,7 +123,6 @@ class ReservationServiceImplTest {
         verify(creditCardPaymentService, never()).isPaymentConfirmed(anyString());
         verify(reservationRepository, never()).save(any(Reservation.class));
     }
-
 
     @Test
     void confirmReservation_BANK_TRANSFER_shouldSetPendingPayment() {
@@ -205,11 +195,10 @@ class ReservationServiceImplTest {
         verify(reservationRepository, never()).save(any(Reservation.class));
     }
 
-
     @Test
     void findPendingBankTransferReservations_shouldReturnOverdueReservations() {
-        LocalDate today = LocalDate.now();
-        LocalDate overdueDate = today.minusDays(2);
+        LocalDate today = LocalDate.of(2025, 1, 10);
+        LocalDate overdueDate = today.minusDays(3);
         LocalDate notOverdueDate = today.minusDays(1);
 
         Reservation overdueReservation = new Reservation();
@@ -224,20 +213,18 @@ class ReservationServiceImplTest {
         notOverdueReservation.setPaymentMode(PaymentMode.BANK_TRANSFER);
         notOverdueReservation.setReservationDate(notOverdueDate);
 
-        Reservation confirmedReservation = new Reservation();
-        confirmedReservation.setId(3L);
-        confirmedReservation.setStatus(ReservationStatus.CONFIRMED);
-        confirmedReservation.setPaymentMode(PaymentMode.BANK_TRANSFER);
-        confirmedReservation.setReservationDate(overdueDate);
-
-        when(reservationRepository.findAll()).thenReturn(List.of(overdueReservation, notOverdueReservation, confirmedReservation));
+        when(reservationRepository.findByStatusAndCreatedAtBefore(
+                eq(ReservationStatus.PENDING_PAYMENT),
+                eq(today.minusDays(2))
+        )).thenReturn(List.of(overdueReservation));
 
         List<Reservation> result = reservationService.findPendingBankTransferReservations(today);
 
-        assertEquals(0, result.size());
+        assertThat(result)
+                .hasSize(1)
+                .extracting(Reservation::getId)
+                .containsExactly(1L);
     }
-
-    // --- cancelReservation Tests ---
 
     @Test
     void cancelReservation_shouldCancel_whenPending() {

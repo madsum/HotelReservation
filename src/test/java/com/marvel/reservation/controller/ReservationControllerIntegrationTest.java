@@ -1,15 +1,20 @@
 package com.marvel.reservation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.marvel.reservation.dto.ReservationRequest;
 import com.marvel.reservation.model.enums.PaymentMode;
 import com.marvel.reservation.model.enums.ReservationStatus;
 import com.marvel.reservation.model.enums.RoomSegment;
 import com.marvel.reservation.repository.ReservationRepository;
+import com.marvel.reservation.service.CreditCardPaymentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Bean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -36,9 +41,13 @@ class ReservationControllerIntegrationTest {
     @Autowired
     private ReservationRepository reservationRepository;
 
+    @Autowired
+    private CreditCardPaymentService creditCardPaymentService;
+
     @BeforeEach
     void setUp() {
-        // Clear the database before each test
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         reservationRepository.deleteAll();
     }
 
@@ -54,7 +63,6 @@ class ReservationControllerIntegrationTest {
         return request;
     }
 
-
     @Test
     void confirmReservation_CASH_shouldReturnConfirmed() throws Exception {
         ReservationRequest request = createBaseRequest(PaymentMode.CASH, "CASH-REF-1");
@@ -66,7 +74,7 @@ class ReservationControllerIntegrationTest {
                 .andExpect(jsonPath("$.reservationStatus", is(ReservationStatus.CONFIRMED.name())));
     }
 
-        @Test
+    @Test
     void confirmReservation_BANK_TRANSFER_shouldReturnPendingPayment() throws Exception {
         ReservationRequest request = createBaseRequest(PaymentMode.BANK_TRANSFER, "P4145478");
 
@@ -84,9 +92,10 @@ class ReservationControllerIntegrationTest {
         mockMvc.perform(post("/api/v1/reservations/confirm")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                        .andExpect(status().isBadRequest())
-                        .andExpect(jsonPath("$.message")
-                        .value("Payment reference is required for Bank Transfer payment."));    }
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error")
+                        .value("Payment reference is required for Bank Transfer payment."));
+    }
 
     @Test
     void confirmReservation_CREDIT_CARD_shouldReturnConfirmed_whenPaymentIsSuccessful() throws Exception {
@@ -106,19 +115,32 @@ class ReservationControllerIntegrationTest {
         mockMvc.perform(post("/api/v1/reservations/confirm")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest()); // PaymentException is expected to result in 400 Bad Request
-
+                .andExpect(status().isBadRequest());
     }
-
 
     @Test
     void confirmReservation_shouldFail_whenReservationIsTooLong() throws Exception {
         ReservationRequest request = createBaseRequest(PaymentMode.CASH, null);
-        request.setEndDate(LocalDate.now().plusDays(32)); // 31 days is too long
+        request.setEndDate(LocalDate.now().plusDays(32));
 
         mockMvc.perform(post("/api/v1/reservations/confirm")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
+    }
+
+    // Test Configuration to stub CreditCardPaymentService
+    @TestConfiguration
+    static class ReservationTestConfig {
+        @Bean
+        public CreditCardPaymentService creditCardPaymentService() {
+            return new CreditCardPaymentService() {
+                @Override
+                public boolean isPaymentConfirmed(String reference) {
+                    // Stubbed responses for integration tests
+                    return "CC-SUCCESS-123".equals(reference);
+                }
+            };
+        }
     }
 }

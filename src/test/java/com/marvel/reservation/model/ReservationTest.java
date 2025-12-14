@@ -36,14 +36,19 @@ class ReservationTest {
         assertThat(r.getStatus()).isEqualTo(ReservationStatus.CONFIRMED);
     }
 
+
+
     @Test
     void testDefaultReservationDateIsSet() {
         Reservation r = new Reservation();
 
         assertThat(r.getReservationDate())
                 .isNotNull()
-                .isEqualTo(LocalDate.now());  // may require clock freeze in advanced setups
+                .isEqualTo(LocalDate.now());
     }
+
+
+
 
     @Test
     void testEqualsAndHashCode() {

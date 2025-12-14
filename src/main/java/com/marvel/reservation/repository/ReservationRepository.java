@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -17,8 +18,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     // Find all reservations with the given status whose createdAt timestamp is before the given cutoff.
     @Query("SELECT r FROM Reservation r WHERE r.status = :status AND r.reservationDate   < :cutoff")
-    List<Reservation> findByStatusAndCreatedAtBefore(
+            List<Reservation> findByStatusAndCreatedAtBefore(
             @Param("status") ReservationStatus status,
-            @Param("cutoff") OffsetDateTime cutoff
-    );}
+            @Param("cutoff") LocalDate cutoff
+    );
+}
 
