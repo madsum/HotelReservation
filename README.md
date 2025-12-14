@@ -12,8 +12,8 @@ This service implements the following key functionalities:
 
 ## Technology Stack
 
-*   **Framework**: Spring Boot 3.x
-*   **Language**: Java 17
+*   **Framework**: Spring Boot 4.x
+*   **Language**: Java 21
 *   **Build Tool**: Maven
 *   **Persistence**: Spring Data JPA
 *   **Database**: H2 (In-memory for testing), PostgreSQL (Recommended for production)
